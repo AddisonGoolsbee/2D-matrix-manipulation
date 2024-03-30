@@ -21,6 +21,7 @@
 <body>
 <script type="module">
     import {get_default_lil_gui, ThreeEngine} from "../js/utils/utils_three.js";
+    import {refresh_displays} from "../js/utils/utils_three.js";
 
     // todo: use the gui initialized below to control the position of a 3D sphere.
     // todo: the sphere should be movable along the ranges x: [-2,2], y: [-2, 2], z: [-2, 2].
@@ -28,10 +29,30 @@
 
     let engine = ThreeEngine.new_default_3d();
 
+    
+    let settings = {
+        x: 0,
+        y: 0,
+        z: 0
+    }
+
+    let actions = {
+        reset: function() {
+            settings.x = 0;
+            settings.y = 0;
+            settings.z = 0;
+            refresh_displays(gui);
+        }
+    }
+
     let gui = get_default_lil_gui();
+    gui.add(settings, 'x', -2.0, 2.0);
+    gui.add(settings, 'y', -2.0, 2.0);
+    gui.add(settings, 'z', -2.0, 2.0);
+    gui.add(actions, 'reset')
 
     engine.animation_loop(() => {
-
+        engine.draw_debug_sphere([settings.x,settings.y,settings.z], 0.04, 0xf0f)
     });
 
 </script>
