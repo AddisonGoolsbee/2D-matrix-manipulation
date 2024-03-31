@@ -20,12 +20,83 @@
 </head>
 <body>
 <script type="module">
-    import {ThreeEngine} from "../js/utils/utils_three.js";
+    import {get_default_lil_gui, ThreeEngine, refresh_displays} from "../js/utils/utils_three.js";
+    import {mul_matrix_matrix} from "../js/utils/utils_math.js"
 
     // todo: recreate this visualization, demonstrating your understanding of displacement-based distance in SE(2)
     // todo: https://yale-cpsc-487-587-internal-djrakita-c95fa6c3239a481a48d29a6b0fd.gitlab.io/html/visualizations/SE2_distance2.html
     // todo: make sure you are using the displacement-based distance!
     // todo: or, feel free to come up with any visualization here that demonstrates your understanding of SE(2) distance
+
+    let engine = ThreeEngine.new_default_2d();
+    
+    let settings = {
+        theta1: 0,
+        x1: 0,
+        y1: 0,
+        theta2: 0,
+        x2: 0,
+        y2: 0,
+    }
+
+    let actions = {
+        reset1: function() {
+            settings.theta1 = 0
+            settings.x1 = 0
+            settings.y1 = 0
+            refresh_displays(gui);
+        },
+        reset2: function() {
+            settings.theta2 = 0
+            settings.x2 = 0
+            settings.y2 = 0
+            refresh_displays(gui);
+        }
+    }
+
+    let gui = get_default_lil_gui();
+    gui.add(settings, 'theta1', -Math.PI, Math.PI).name('Theta 1')
+    gui.add(settings, 'x1', -2.0, 2.0).name('Translation x1')
+    gui.add(settings, 'y1', -2.0, 2.0).name('Translation y1')
+    gui.add(actions, 'reset1').name('Reset Matrix 1')
+    gui.add(settings, 'theta2', -Math.PI, Math.PI).name('Theta 2')
+    gui.add(settings, 'x2', -2.0, 2.0).name('Translation x2')
+    gui.add(settings, 'y2', -2.0, 2.0).name('Translation y2')
+    gui.add(actions, 'reset2').name('Reset Matrix 2')
+
+    const map_point = (point, m) => {
+        let res = mul_matrix_matrix(m, [point[0], point[1], [1]]);
+        res.pop();
+        return res;
+    }
+
+    const generate_element = (first) => {
+        let m00 = Math.cos(first ? settings.theta1 : settings.theta2)
+        let m01 = Math.sin(first ? settings.theta1 : settings.theta2)
+        let m02 = first ? settings.x1 : settings.x2
+        let m10 = -Math.sin(first ? settings.theta1 : settings.theta2)
+        let m11 = Math.cos(first ? settings.theta1 : settings.theta2)
+        let m12 = first ? settings.y1 : settings.y2
+        let m20 = 0
+        let m21 = 0
+        let m22 = 1
+        let m = [[m00, m01, m02], [m10, m11, m12], [m20, m21, m22]]
+
+        let center = map_point([[0],[0]], m)
+        let red = map_point([[1],[0]], m)
+        let green = map_point([[0],[1]], m)
+
+        engine.draw_debug_vector(center, red, 0.035, undefined, first ? 0xff3333 : 0xcc3333);
+        engine.draw_debug_vector(center, green, 0.035, undefined, first ? 0x33ff33 : 0x33cc33);
+        return m
+    }
+
+    engine.animation_loop(() => {
+        let m1 = generate_element(true)
+        let m2 = generate_element(false)
+
+    
+    });
 
 </script>
 </body>
