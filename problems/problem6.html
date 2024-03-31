@@ -37,6 +37,7 @@
         theta2: 0,
         x2: 0,
         y2: 0,
+        distance: '0'
     }
 
     let actions = {
@@ -63,6 +64,7 @@
     gui.add(settings, 'x2', -2.0, 2.0).name('Translation x2')
     gui.add(settings, 'y2', -2.0, 2.0).name('Translation y2')
     gui.add(actions, 'reset2').name('Reset Matrix 2')
+    gui.add(settings, 'distance').name('disp based dis').disable()
 
     const map_point = (point, m) => {
         let res = mul_matrix_matrix(m, [point[0], point[1], [1]]);
@@ -91,11 +93,38 @@
         return m
     }
 
+    const calculate_distance = (m1, m2) => {
+        // find Rd, the displacement between the two elements (m1^-1 * m2)
+        let m1_inv = numeric.inv(m1)
+        let disp = mul_matrix_matrix(m1_inv, m2)
+
+        // find the natural log of the displacement matrix
+        let a1 = Math.atan2(disp[1][0], disp[0][0])
+        let p, q
+        if (Math.abs(a1) < 0.0001) {
+            p = 1.0 - (Math.pow(a1, 2.0) / 6.0) + (Math.pow(a1, 4.0) / 120.0)
+            q = a1 / 2.0 - (Math.pow(a1, 3.0) / 24.0) + (Math.pow(a1, 5.0) / 720.0)
+        } else {
+            p = Math.sin(a1) / a1
+            q = (1.0 - Math.cos(a1)) / a1
+        }
+        let tx = disp[0][2]
+        let ty = disp[1][2]
+        let a2 = (1.0 / (Math.pow(p, 2) + Math.pow(q, 2))) * (p*tx + q*ty)
+        let a3 = (1.0 / (Math.pow(p, 2) + Math.pow(q, 2))) * (-q*tx + p*ty)
+
+        // skip a few useless steps and find the euclidean distance of a vector made up of a1 a2 and a3
+        let distance = Math.sqrt(a1*a1 + a2*a2 + a3*a3)
+        return distance
+    }
+
     engine.animation_loop(() => {
         let m1 = generate_element(true)
         let m2 = generate_element(false)
 
-    
+        let dis = calculate_distance(m1, m2)
+        settings.distance = dis.toFixed(4).toString()
+        refresh_displays(gui)
     });
 
 </script>
